@@ -1,0 +1,200 @@
+ <!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Моя Автоматическая Полноэкранная Галерея</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #20073c;
+            margin: 0;
+            padding: 20px;
+            text-align: center;
+            
+            /* Убираем синий занавес и выделение при кликах */
+            -webkit-tap-highlight-color: transparent;
+            user-select: none;
+            -webkit-user-select: none;
+        }
+        h1 { color: #333; }
+        
+        /* ПАНЕЛЬ С БЕГУНКОМ ДЛЯ РЕГУЛИРОВКИ РАЗМЕРА */
+        .controls {
+            background: #fff;
+            padding: 15px;
+            border-radius: 8px;
+            max-width: 400px;
+            margin: 0 auto 20px auto;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 15px;
+        }
+        .controls label {
+            font-weight: bold;
+            font-size: 14px;
+            color: #444;
+        }
+        .controls input[type="range"] {
+            cursor: pointer;
+            width: 200px;
+        }
+
+        /* СЕТКА ГАЛЕРЕИ (РАЗМЕР МЕНЯЕТСЯ ДИНАМИЧЕСКИ) */
+        .gallery {
+            display: grid;
+            /* Переменная --size динамически управляется бегунком */
+            grid-template-columns: repeat(auto-fit, minmax(var(--size, 250px), 1fr));
+            gap: 20px;
+            max-width: 1400px;
+            margin: 20px auto;
+            padding: 10px;
+        }
+        
+        .photo-card {
+            background: #fff;
+            border-radius: 8px;
+            overflow: hidden;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+            transition: transform 0.2s;
+            cursor: pointer;
+        }
+        .photo-card:hover { transform: scale(1.03); }
+        .photo-card img {
+            width: 100%;
+            height: 250px;
+            object-fit: cover;
+            display: block;
+        }
+        .photo-caption {
+            padding: 10px;
+            font-size: 14px;
+            color: #666;
+            font-weight: bold;
+        }
+
+        /* ПОЛНОЭКРАННЫЙ РЕЖИМ ПРОСМОТРА БЕЗ СИНЕЙ ПЕЛЕНЫ */
+        .lightbox {
+            display: none;
+            position: fixed;
+            z-index: 999;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background-color: rgba(0, 0, 0, 0.95); /* Глубокий благородный черный фон */
+            justify-content: center;
+            align-items: center;
+        }
+        .lightbox img {
+            width: auto;
+            height: auto;
+            max-width: 90%;
+            max-height: 85vh;
+            min-width: 350px; /* Защита вертикальных скриншотов от сжатия в нитку */
+            object-fit: contain;
+            box-shadow: 0 0 30px rgba(255,255,255,0.1);
+            border-radius: 4px;
+            -webkit-user-drag: none; /* Запрещает синее выделение самой картинки */
+        }
+        .close-btn {
+            position: absolute;
+            top: 20px; right: 30px;
+            color: #fff; font-size: 40px; font-weight: bold;
+            cursor: pointer;
+        }
+        .nav-hint {
+            position: absolute;
+            bottom: 20px; color: #aaa; font-size: 14px;
+        }
+    </style>
+</head>
+<body>
+
+    <h1>Моя Галерея Фотографий</h1>
+    
+    <!-- Панель управления размером эскизов -->
+    <div class="controls">
+        <label for="sizeSlider">Размер эскизов:</label>
+        <input type="range" id="sizeSlider" min="100" max="450" value="100" step="10">
+    </div>
+
+    <p>Кликните на фото для просмотра на весь экран. Листайте стрелками «влево» и «вправо»</p>
+
+    <!-- Инициализируем базовый размер в стиле (250px) -->
+    <div class="gallery" id="galleryContainer" style="--size: 125px;"></div>
+
+    <!-- Полноэкранный блок -->
+    <div class="lightbox" id="lightbox">
+        <span class="close-btn" id="closeBtn">&times;</span>
+        <img id="lightboxImg" src="" alt="">
+        <div class="nav-hint">Стрелки влево/вправо — листать. Выход — Esc или клик мимо фотографии</div>
+    </div>
+
+    <script>
+        // === ПУЛЬТ УПРАВЛЕНИЯ КОЛИЧЕСТВОМ ФОТОГРАФИЙ ===
+        const totalPhotos = 1228; 
+
+        const container = document.getElementById('galleryContainer');
+        const lightbox = document.getElementById('lightbox');
+        const lightboxImg = document.getElementById('lightboxImg');
+        const closeBtn = document.getElementById('closeBtn');
+        const sizeSlider = document.getElementById('sizeSlider');
+        
+        let currentIdx = 1;
+
+        // Логика бегунка: меняет размер карточек на главном экране на лету
+        sizeSlider.addEventListener('input', (e) => {
+            container.style.setProperty('--size', e.target.value + 'px');
+        });
+
+        // Функция открытия фото во весь экран
+        function openLightbox(index) {
+            currentIdx = index;
+            lightboxImg.src = `${currentIdx}_jpeg.jpg`;
+            lightbox.style.display = 'flex';
+        }
+
+        // Функция закрытия полноэкранного режима
+        function closeLightbox() {
+            lightbox.style.display = 'none';
+        }
+
+        // Автоматический цикл для построения всей галереи
+        for (let i = 1; i <= totalPhotos; i++) {
+            const card = document.createElement('div');
+            card.className = 'photo-card';
+            card.innerHTML = `
+                <img src="${i}_jpeg.jpg" alt="Фото ${i}" loading="lazy">
+                <div class="photo-caption">Фотография ${i}</div>
+            `;
+            card.addEventListener('click', () => openLightbox(i));
+            container.appendChild(card);
+        }
+
+        // Закрытие кликом по крестику
+        closeBtn.addEventListener('click', closeLightbox);
+        
+        // Закрытие кликом по пустому месту на черном фоне
+        lightbox.addEventListener('click', (e) => {
+            if (e.target === lightbox) closeLightbox();
+        });
+
+        // Управление клавиатурой (джойстиком)
+        document.addEventListener('keydown', (e) => {
+            if (lightbox.style.display === 'flex') {
+                if (e.key === 'ArrowRight') { // Стрелка вправо
+                    currentIdx = currentIdx >= totalPhotos ? 1 : currentIdx + 1;
+                    lightboxImg.src = `${currentIdx}_jpeg.jpg`;
+                } else if (e.key === 'ArrowLeft') { // Стрелка влево
+                    currentIdx = currentIdx <= 1 ? totalPhotos : currentIdx - 1;
+                    lightboxImg.src = `${currentIdx}_jpeg.jpg`;
+                } else if (e.key === 'Escape') { // Выход по Esc
+                    closeLightbox();
+                }
+            }
+        });
+    </script>
+
+</body>
+</html>
+
