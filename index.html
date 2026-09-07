@@ -91,16 +91,22 @@
         }
 
         // Автоматический цикл для построения всей галереи
-        for (let i = 1; i <= totalPhotos; i++) {
+          for (let i = 1; i <= totalPhotos; i++) {
             const card = document.createElement('div');
             card.className = 'photo-card';
+
             card.innerHTML = `
-                <img src="${i}_jpeg.jpg" alt="Фото ${i}" loading="lazy">
+                <img src="images/${i}_jpeg.jpg" alt="Фото ${i}" width="120" height="120" loading="lazy" decoding="async">
                 <div class="photo-caption">Фотография ${i}</div>
             `;
+
             card.addEventListener('click', () => openLightbox(i));
             container.appendChild(card);
         }
+
+
+
+
 
         // Закрытие кликом по крестику
         closeBtn.addEventListener('click', closeLightbox);
