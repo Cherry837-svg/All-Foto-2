@@ -109,7 +109,7 @@
 
                 // Формируем карточку. Браузер качает фото лениво (lazy) и в фоне (async)
                 card.innerHTML = `
-                    <img src="${i}_jpeg.jpg" alt="Фото ${i}" loading="lazy" decoding="async">
+                    <img src="thumbs/${i}_jpeg.jpg" alt="Фото ${i}" loading="lazy" decoding="async">
                 `;
 
                 // Привязываем клик к вашей функции лайтбокса (увеличения фото)
